@@ -34,7 +34,12 @@ class OllamaProvider(BaseLLMProvider):
         
         random.seed(seed)
         self._seed = random.randint(42, 1024)
-        self._session = aiohttp.ClientSession()
+        self._session = aiohttp.ClientSession(
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+        )
         self._validate_models_task = asyncio.create_task(self.validate_models())
     
     @classmethod
