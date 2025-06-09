@@ -32,7 +32,12 @@ class OllamaProvider:
         self._base_url = f"http://{llm_address}:{int(port) + int(seed)}/api"
         random.seed(seed)
         self._seed = random.randint(42, 1024)
-        self._session = aiohttp.ClientSession()
+        self._session = aiohttp.ClientSession(
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+        )
         self._validate_task = asyncio.create_task(self._validate_model())
 
     async def _validate_model(self) -> None:
@@ -47,7 +52,13 @@ class OllamaProvider:
         await self._validate_task
         url = f"{self._base_url}/generate"
         options = {"seed": self._seed, **extra}
-        payload = {"model": self._model, "prompt": prompt, "raw": raw, "options": options}
+        payload = {
+            "model": self._model,
+            "prompt": prompt,
+            "raw": raw,
+            "options": options,
+            "stream": False,
+        }
         if system_prompt is not None:
             payload["system"] = system_prompt
         async with self._session.post(url, json=payload) as resp:
@@ -60,7 +71,12 @@ class OllamaProvider:
         await self._validate_task
         url = f"{self._base_url}/chat"
         options = {"seed": self._seed, **extra}
-        payload = {"model": self._model, "messages": messages, "options": options}
+        payload = {
+            "model": self._model,
+            "messages": messages,
+            "options": options,
+            "stream": False,
+        }
         if system_prompt is not None:
             payload.setdefault("messages", []).insert(0, {"role": "system", "content": system_prompt})
         async with self._session.post(url, json=payload) as resp:
